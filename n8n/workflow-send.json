@@ -1,0 +1,112 @@
+{
+  "name": "Harbor Supply Co. — Send Approved Reply",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "approve-send",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "d3b20001-0001-4a10-9a01-000000000001",
+      "name": "Approval webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-140, 300],
+      "webhookId": "d3b20001-0001-4a10-9a01-000000000001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s-01", "name": "runId", "value": "={{ $json.body.runId }}", "type": "string" },
+            { "id": "s-02", "name": "to", "value": "={{ $json.body.to }}", "type": "string" },
+            { "id": "s-03", "name": "subject", "value": "={{ $json.body.subject }}", "type": "string" },
+            { "id": "s-04", "name": "body", "value": "={{ $json.body.body }}", "type": "string" },
+            { "id": "s-05", "name": "intent", "value": "={{ $json.body.intent }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3b20001-0002-4a10-9a01-000000000002",
+      "name": "Normalize approval",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "your-address@gmail.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "d3b20001-0003-4a10-9a01-000000000003",
+      "name": "Send the approved reply",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [360, 300],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Gmail SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "http://host.docker.internal:3000/api/triage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"id\": $('Normalize approval').item.json.runId, \"action\": \"status\", \"status\": \"sent\" } }}",
+        "options": {}
+      },
+      "id": "d3b20001-0004-4a10-9a01-000000000004",
+      "name": "Mark sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [620, 200]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "http://host.docker.internal:3000/api/triage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"id\": $('Normalize approval').item.json.runId, \"action\": \"status\", \"status\": \"failed\", \"error\": ('Send failed: ' + ($json.error?.message || 'unknown SMTP error')) } }}",
+        "options": {}
+      },
+      "id": "d3b20001-0005-4a10-9a01-000000000005",
+      "name": "Mark send failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [620, 420]
+    }
+  ],
+  "connections": {
+    "Approval webhook": {
+      "main": [[{ "node": "Normalize approval", "type": "main", "index": 0 }]]
+    },
+    "Normalize approval": {
+      "main": [[{ "node": "Send the approved reply", "type": "main", "index": 0 }]]
+    },
+    "Send the approved reply": {
+      "main": [
+        [{ "node": "Mark sent", "type": "main", "index": 0 }],
+        [{ "node": "Mark send failed", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateId": "harbor-supply-co-approve-send"
+  }
+}

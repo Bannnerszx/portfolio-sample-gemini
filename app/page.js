@@ -1,103 +1,81 @@
-import Image from "next/image";
+import Link from "next/link";
+import EmailForm from "@/components/EmailForm";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-12 sm:py-16">
+      <header className="mb-10">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Harbor Supply Co. · portfolio demo
+        </p>
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          AI inbox triage with a human approval gate
+        </h1>
+        <p className="mt-4 text-zinc-600 dark:text-zinc-400">
+          An inbound email is classified and routed automatically, a reply is drafted in the
+          business&apos;s voice — and then everything stops until a person clicks Approve.{" "}
+          <strong className="font-medium text-zinc-900 dark:text-zinc-100">
+            Nothing is ever sent without human sign-off.
+          </strong>
+        </p>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      <section className="mb-10 rounded-xl border border-zinc-200 bg-white p-5 text-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="mb-3 font-medium">What happens when you submit</h2>
+        <ol className="space-y-2 text-zinc-600 dark:text-zinc-400">
+          <Step n="1">
+            The email is validated and given a stable ID, so a retry or a double-click can never
+            produce two replies to the same customer.
+          </Step>
+          <Step n="2">
+            Gemini classifies it — intent, urgency, sentiment, confidence — and extracts contact and
+            order details into a strict schema.
+          </Step>
+          <Step n="3">
+            Low confidence stops here and goes to a review queue. Everything else is routed by
+            intent: leads and tickets are upserted into the CRM sheet (deduplicated by email),
+            billing goes to finance.
+          </Step>
+          <Step n="4">
+            A reply is drafted and posted to Slack for review — then it waits. Approve, edit, or
+            reject in the ops dashboard.
+          </Step>
+          <Step n="5">
+            If any step fails, the run is marked failed with the error and can be retried from the
+            dashboard.
+          </Step>
+        </ol>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-1 text-lg font-medium">Simulate an inbound email</h2>
+        <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
+          Load a sample or paste your own. The &ldquo;ambiguous&rdquo; sample is worth trying — it
+          deliberately trips the confidence gate.
+        </p>
+        <EmailForm />
+      </section>
+
+      <footer className="border-t border-zinc-200 pt-6 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+        <p>
+          Harbor Supply Co. is a fictional business. No real customer data is used.{" "}
+          <Link href="/ops" className="underline">
+            Open the ops dashboard
+          </Link>
+          .
+        </p>
       </footer>
-    </div>
+    </main>
+  );
+}
+
+function Step({ n, children }) {
+  return (
+    <li className="flex gap-3">
+      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+        {n}
+      </span>
+      <span>{children}</span>
+    </li>
   );
 }

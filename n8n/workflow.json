@@ -1,0 +1,402 @@
+{
+  "name": "Harbor Supply Co. — Inbox Triage & Routing",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbox-triage",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "c2a10001-0001-4a10-9a01-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-160, 460],
+      "webhookId": "c2a10001-0001-4a10-9a01-000000000001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "n-01", "name": "runId", "value": "={{ $json.body.runId }}", "type": "string" },
+            { "id": "n-02", "name": "from", "value": "={{ $json.body.from }}", "type": "string" },
+            { "id": "n-03", "name": "subject", "value": "={{ $json.body.subject }}", "type": "string" },
+            { "id": "n-04", "name": "intent", "value": "={{ $json.body.intent }}", "type": "string" },
+            { "id": "n-05", "name": "urgency", "value": "={{ $json.body.urgency }}", "type": "string" },
+            { "id": "n-06", "name": "sentiment", "value": "={{ $json.body.sentiment }}", "type": "string" },
+            { "id": "n-07", "name": "confidence", "value": "={{ $json.body.confidence }}", "type": "number" },
+            { "id": "n-08", "name": "name", "value": "={{ $json.body.contact.name }}", "type": "string" },
+            { "id": "n-09", "name": "email", "value": "={{ $json.body.contact.email }}", "type": "string" },
+            { "id": "n-10", "name": "company", "value": "={{ $json.body.contact.company }}", "type": "string" },
+            { "id": "n-11", "name": "orderRef", "value": "={{ $json.body.orderRef }}", "type": "string" },
+            { "id": "n-12", "name": "summary", "value": "={{ $json.body.summary }}", "type": "string" },
+            { "id": "n-13", "name": "owner", "value": "={{ $json.body.suggestedOwner }}", "type": "string" },
+            { "id": "n-14", "name": "reviewUrl", "value": "=http://localhost:3000/ops/{{ $json.body.runId }}", "type": "string" },
+            { "id": "n-15", "name": "date", "value": "={{ $now.toISO() }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c2a10001-0002-4a10-9a01-000000000002",
+      "name": "Normalize triage",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [60, 460]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "gate-1",
+              "leftValue": "={{ $json.confidence }}",
+              "rightValue": 0.7,
+              "operator": { "type": "number", "operation": "gte" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "c2a10001-0003-4a10-9a01-000000000003",
+      "name": "Confidence >= 0.7?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [280, 460]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "sw-lead",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "new_lead",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "new_lead"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "sw-support",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "support",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "support"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "sw-billing",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "billing",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "billing"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "sw-spam",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "spam",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "spam"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "c2a10001-0004-4a10-9a01-000000000004",
+      "name": "Route by intent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [540, 340]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "CRM",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.email }}",
+            "name": "={{ $json.name }}",
+            "company": "={{ $json.company }}",
+            "stage": "Lead",
+            "lastSubject": "={{ $json.subject }}",
+            "lastSummary": "={{ $json.summary }}",
+            "owner": "={{ $json.owner }}",
+            "updatedAt": "={{ $json.date }}"
+          },
+          "matchingColumns": ["email"],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "c2a10001-0005-4a10-9a01-000000000005",
+      "name": "CRM upsert (dedupe by email)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [820, 120],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "googleApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Google Sheets service account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Tickets",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "runId": "={{ $json.runId }}",
+            "email": "={{ $json.email }}",
+            "orderRef": "={{ $json.orderRef }}",
+            "subject": "={{ $json.subject }}",
+            "priority": "={{ $json.urgency === 'high' ? 'P1' : 'P3' }}",
+            "sentiment": "={{ $json.sentiment }}",
+            "owner": "={{ $json.owner }}",
+            "updatedAt": "={{ $json.date }}"
+          },
+          "matchingColumns": ["runId"],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "c2a10001-0006-4a10-9a01-000000000006",
+      "name": "Ticket upsert (dedupe by runId)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [820, 300],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "googleApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Google Sheets service account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/REPLACE/WITH/YOUR_FINANCE_WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"💳 Billing enquiry from {{ $json.name || $json.email }} — {{ $json.subject }}\\nRef: {{ $json.orderRef || 'none' }}\\nReview: {{ $json.reviewUrl }}\"\n}",
+        "options": {}
+      },
+      "id": "c2a10001-0007-4a10-9a01-000000000007",
+      "name": "Notify finance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 480],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "c2a10001-0008-4a10-9a01-000000000008",
+      "name": "Spam — log only, no reply",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [820, 660]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/REPLACE/WITH/YOUR_ORDERS_WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"📥 *{{ $('Normalize triage').item.json.intent }}* from {{ $('Normalize triage').item.json.name || $('Normalize triage').item.json.email }}\\n_{{ $('Normalize triage').item.json.summary }}_\\nConfidence {{ $('Normalize triage').item.json.confidence }} · urgency {{ $('Normalize triage').item.json.urgency }}\\n\\n*A reply is drafted and waiting for approval — nothing has been sent.*\\n👉 {{ $('Normalize triage').item.json.reviewUrl }}\"\n}",
+        "options": {}
+      },
+      "id": "c2a10001-0009-4a10-9a01-000000000009",
+      "name": "Slack: ready for approval",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "http://host.docker.internal:3000/api/triage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"id\": $('Normalize triage').item.json.runId, \"action\": \"status\", \"status\": \"awaiting_approval\" } }}",
+        "options": {}
+      },
+      "id": "c2a10001-0010-4a10-9a01-000000000010",
+      "name": "Mark awaiting approval",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1360, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/REPLACE/WITH/YOUR_ORDERS_WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"🤔 Low-confidence email needs a human ({{ $json.confidence }} < 0.7)\\nFrom: {{ $json.email }} — {{ $json.subject }}\\nNo reply was drafted. Review: {{ $json.reviewUrl }}\"\n}",
+        "options": {}
+      },
+      "id": "c2a10001-0011-4a10-9a01-000000000011",
+      "name": "Slack: needs human review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 700],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "http://host.docker.internal:3000/api/triage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"id\": $('Normalize triage').item.json.runId, \"action\": \"status\", \"status\": \"needs_review\" } }}",
+        "options": {}
+      },
+      "id": "c2a10001-0012-4a10-9a01-000000000012",
+      "name": "Mark needs review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 840]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "http://host.docker.internal:3000/api/triage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"id\": $('Normalize triage').item.json.runId, \"action\": \"status\", \"status\": \"failed\", \"error\": ($json.error?.message || $json.error || 'Workflow step failed') } }}",
+        "options": {}
+      },
+      "id": "c2a10001-0013-4a10-9a01-000000000013",
+      "name": "Mark run failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1360, 620]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Normalize triage", "type": "main", "index": 0 }]]
+    },
+    "Normalize triage": {
+      "main": [[{ "node": "Confidence >= 0.7?", "type": "main", "index": 0 }]]
+    },
+    "Confidence >= 0.7?": {
+      "main": [
+        [{ "node": "Route by intent", "type": "main", "index": 0 }],
+        [{ "node": "Slack: needs human review", "type": "main", "index": 0 }]
+      ]
+    },
+    "Route by intent": {
+      "main": [
+        [{ "node": "CRM upsert (dedupe by email)", "type": "main", "index": 0 }],
+        [{ "node": "Ticket upsert (dedupe by runId)", "type": "main", "index": 0 }],
+        [{ "node": "Notify finance", "type": "main", "index": 0 }],
+        [{ "node": "Spam — log only, no reply", "type": "main", "index": 0 }]
+      ]
+    },
+    "CRM upsert (dedupe by email)": {
+      "main": [
+        [{ "node": "Slack: ready for approval", "type": "main", "index": 0 }],
+        [{ "node": "Mark run failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ticket upsert (dedupe by runId)": {
+      "main": [
+        [{ "node": "Slack: ready for approval", "type": "main", "index": 0 }],
+        [{ "node": "Mark run failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify finance": {
+      "main": [
+        [{ "node": "Slack: ready for approval", "type": "main", "index": 0 }],
+        [{ "node": "Mark run failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Slack: ready for approval": {
+      "main": [
+        [{ "node": "Mark awaiting approval", "type": "main", "index": 0 }],
+        [{ "node": "Mark run failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Slack: needs human review": {
+      "main": [
+        [{ "node": "Mark needs review", "type": "main", "index": 0 }],
+        [{ "node": "Mark run failed", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateId": "harbor-supply-co-inbox-triage"
+  }
+}

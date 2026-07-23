@@ -1,0 +1,41 @@
+{
+  "name": "Harbor Supply Co. — Error Handler",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e4c30001-0001-4a10-9a01-000000000001",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/REPLACE/WITH/YOUR_ALERTS_WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"🚨 *Workflow failure* — {{ $json.workflow.name }}\\nFailed at node: *{{ $json.execution.lastNodeExecuted }}*\\nError: {{ $json.execution.error.message }}\\nExecution: {{ $json.execution.url }}\"\n}",
+        "options": {}
+      },
+      "id": "e4c30001-0002-4a10-9a01-000000000002",
+      "name": "Alert #ops on Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [160, 300]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [[{ "node": "Alert #ops on Slack", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateId": "harbor-supply-co-error-handler"
+  }
+}

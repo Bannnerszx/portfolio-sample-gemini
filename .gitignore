@@ -32,6 +32,19 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+*portfolio-showcase-7b15f-firebase-adminsdk-fbsvc-9f9c25fe73.json
+
+AGENTS.md
+CLAUDE.md
+
+client_secret_1089384949968-4qvej142qfpsjgnd3eah2suroonm7b28.apps.googleusercontent.com.json
+
+# service-account keys / secrets (never commit)
+*service-account*.json
+*serviceAccount*.json
+*.key.json
 
 # vercel
 .vercel
