@@ -10,7 +10,7 @@ RUN npm ci
 # NEXT_PUBLIC_* values are inlined into the client bundle at build time, so they
 # have to be present *here*, not just at runtime. They are public by definition
 # (they ship to every browser) — the admin key and Gemini key are not, and are
-# injected at runtime via env_file
+# injected at runtime via env_fil
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
