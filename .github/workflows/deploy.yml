@@ -40,6 +40,6 @@ jobs:
           script: |
             set -euo pipefail
             cd ~/portfolio-sample-gemini
-            printf '%s' "$ENV_FILE_B64" | tr -d '\r\n ' | base64 -d > .env
+            printf '%s' "$ENV_FILE_B64" | tr -d ' ' | base64 -d | tr -d '\r' > .env
             docker compose up -d --build app
             docker image prune -f
