@@ -13,7 +13,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH deploy
+      # 1. GitHub downloads your code inside the GitHub Action runner
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # 2. Upload your project files directly to the VM via SSH (No git clone needed!)
+      - name: Copy project files to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "."
+          target: "~/portfolio-sample-gemini"
+
+      # 3. Create .env file and rebuild Docker containers on the VM
+      - name: Deploy Docker container on VM
         uses: appleboy/ssh-action@v1.0.3
         env:
           ENV_FILE_B64: ${{ secrets.ENV_FILE_B64 }}
@@ -24,17 +39,7 @@ jobs:
           envs: ENV_FILE_B64
           script: |
             set -euo pipefail
-            if [ ! -d "$HOME/portfolio-sample-gemini" ]; then
-              git clone https://github.com/Bannnerszx/portfolio-sample-gemini.git "$HOME/portfolio-sample-gemini"
-            fi
-            cd ~/harbor-supply-co
-            # reset, not pull: a dirty checkout on the VM can't wedge a deploy
-            git fetch origin main
-            git reset --hard origin/main
-            # base64, not a raw echo: FIREBASE_ADMIN_PRIVATE_KEY holds literal
-            # \n sequences that some shells' echo would expand and corrupt
+            cd ~/portfolio-sample-gemini
             printf '%s' "$ENV_FILE_B64" | base64 -d > .env
-            # `app` named on purpose — leaves cloudflared running so the Quick
-            # Tunnel URL survives the deploy
             docker compose up -d --build app
             docker image prune -f
