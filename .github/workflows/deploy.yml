@@ -21,7 +21,7 @@ jobs:
           B64_ENV=$(echo -n "$RAW_ENV" | base64 -w 0)
           echo "B64_ENV=$B64_ENV" >> $GITHUB_ENV
 
-      # Step 2: SSH into VM, decode the file, and restart Docker
+      # Step 2: SSH into VM, decode the file, and restart Docke
       - name: SSH Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         env:
