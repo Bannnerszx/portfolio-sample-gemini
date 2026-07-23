@@ -196,7 +196,7 @@ export async function POST(request) {
   }
 
   // 7) Forward to n8n — best-effort, exactly as in piece #1. A deployed URL
-  //    can't reach a laptop's n8n, and that must not break the demo.
+  //    can't reach a laptop's n8n, and that must not break the demo
   await forwardToN8n(process.env.N8N_WEBHOOK_URL, {
     runId,
     status,
