@@ -24,8 +24,8 @@ jobs:
           envs: ENV_FILE_B64
           script: |
             set -euo pipefail
-            if [ ! -d "$HOME/harbor-supply-co" ]; then
-              git clone https://github.com/Bannnerszx/harbor-supply-co.git "$HOME/harbor-supply-co"
+            if [ ! -d "$HOME/portfolio-sample-gemini" ]; then
+              git clone https://github.com/Bannnerszx/portfolio-sample-gemini.git "$HOME/portfolio-sample-gemini"
             fi
             cd ~/harbor-supply-co
             # reset, not pull: a dirty checkout on the VM can't wedge a deploy
