@@ -13,33 +13,30 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. GitHub downloads your code inside the GitHub Action runner
-      - name: Checkout repository code
-        uses: actions/checkout@v4
+      # Step 1: GitHub automatically converts your plain text secret to clean Base64
+      - name: Prepare Environment File
+        env:
+          RAW_ENV: ${{ secrets.ENV_CONTENT }}
+        run: |
+          B64_ENV=$(echo -n "$RAW_ENV" | base64 -w 0)
+          echo "B64_ENV=$B64_ENV" >> $GITHUB_ENV
 
-      # 2. Upload your project files directly to the VM via SSH (No git clone needed!)
-      - name: Copy project files to VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          source: "."
-          target: "~/portfolio-sample-gemini"
-
-      # 3. Create .env file and rebuild Docker containers on the VM
-      - name: Deploy Docker container on VM
+      # Step 2: SSH into VM, decode the file, and restart Docker
+      - name: SSH Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         env:
-          ENV_FILE_B64: ${{ secrets.ENV_FILE_B64 }}
+          B64_ENV: ${{ env.B64_ENV }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          envs: ENV_FILE_B64
+          envs: B64_ENV
           script: |
             set -euo pipefail
             cd ~/portfolio-sample-gemini
-            printf '%s' "$ENV_FILE_B64" | tr -d '\r\n ' | base64 -d | tr -d '\r' > .env            
-            docker compose up -d --build app
+            
+            # Write to .env and strip Windows line endings (\r) automatically
+            echo "$B64_ENV" | base64 -d | tr -d '\r' > .env
+            
+            docker compose up -d --build
             docker image prune -f
