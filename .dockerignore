@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.github
+
+# Secrets never enter the image. The six public NEXT_PUBLIC_FIREBASE_* values
+# the client bundle needs are passed in as build args instead (see Dockerfile).
+.env*
+!.env.example
+*firebase-adminsdk*.json
+client_secret_*.json
+*service-account*.json
+
+npm-debug.log*
+docs

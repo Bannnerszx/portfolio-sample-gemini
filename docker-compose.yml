@@ -1,0 +1,38 @@
+# Two containers: the Next.js app, and a Cloudflare Quick Tunnel that gives it a
+# public https URL without opening a single inbound port on the VM.
+#
+# Both read `.env` in this directory (NOT .env.local — Compose only interpolates
+# ${...} from a file named exactly `.env`). See docs/DEPLOY.md.
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Build-time only. Next inlines these into the client bundle; without
+        # them the live dashboard renders its "not configured" fallback.
+        NEXT_PUBLIC_FIREBASE_API_KEY: "${NEXT_PUBLIC_FIREBASE_API_KEY}"
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}"
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: "${NEXT_PUBLIC_FIREBASE_PROJECT_ID}"
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}"
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}"
+        NEXT_PUBLIC_FIREBASE_APP_ID: "${NEXT_PUBLIC_FIREBASE_APP_ID}"
+    container_name: harbor-app
+    restart: always
+    # No host port published: cloudflared reaches the app over the compose
+    # network. Add `ports: ["3000:3000"]` if you want to curl it from the VM.
+    expose:
+      - "3000"
+    env_file:
+      - .env
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: harbor-tunnel
+    restart: always
+    command: tunnel --no-autoupdate --url http://app:3000
+    depends_on:
+      - app
+    # Deliberately NOT rebuilt by the deploy workflow: a Quick Tunnel hostname
+    # is issued per process, so restarting this container changes the public
+    # URL. `docker compose up -d --build app` leaves it alone.

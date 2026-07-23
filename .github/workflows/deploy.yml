@@ -1,0 +1,37 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vm
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ENV_FILE_B64: ${{ secrets.ENV_FILE_B64 }}
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          envs: ENV_FILE_B64
+          script: |
+            set -euo pipefail
+            cd ~/harbor-supply-co
+            # reset, not pull: a dirty checkout on the VM can't wedge a deploy
+            git fetch origin main
+            git reset --hard origin/main
+            # base64, not a raw echo: FIREBASE_ADMIN_PRIVATE_KEY holds literal
+            # \n sequences that some shells' echo would expand and corrupt
+            printf '%s' "$ENV_FILE_B64" | base64 -d > .env
+            # `app` named on purpose — leaves cloudflared running so the Quick
+            # Tunnel URL survives the deploy
+            docker compose up -d --build app
+            docker image prune -f
