@@ -1,0 +1,7 @@
+name = "harbor-gemini-proxy"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# PROXY_TOKEN is a secret, not a var — set it with:
+#   npx wrangler secret put PROXY_TOKEN
+# Never put it in this file; this file is committed.

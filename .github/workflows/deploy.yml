@@ -38,5 +38,8 @@ jobs:
             # Write to .env and strip Windows line endings (\r) automatically
             echo "$B64_ENV" | base64 -d | tr -d '\r' > .env
             
-            docker compose up -d --build
+            # Rebuild the app ONLY. `docker compose up -d --build` would also
+            # recreate cloudflared, and a Quick Tunnel hostname is issued per
+            # process — that changes the public demo URL on every push.
+            docker compose up -d --build app
             docker image prune -f
