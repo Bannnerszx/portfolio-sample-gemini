@@ -9,7 +9,7 @@ export default function Home() {
           Harbor Supply Co. · portfolio demo
         </p>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          AI inbox triage with a human approval gate plus one
+          AI inbox triage with a human approval gate
         </h1>
         <p className="mt-4 text-zinc-600 dark:text-zinc-400">
           An inbound email is classified and routed automatically, a reply is drafted in the
