@@ -229,6 +229,8 @@ After importing you must:
    because a public URL can't reach n8n on your laptop — the forward is best-effort and its failure
    never breaks a submission. *(Optional: expose local n8n with a Cloudflare Tunnel and point
    `N8N_WEBHOOK_URL` at it for a genuinely live loop.)*
+4. Live URL for the website: https://look-levy-reviewing-imagine.trycloudflare.com
+5. Live URL for n8n: https://shortcuts-everyday-korean-amd.trycloudflare.com/home/workflows
 
 Set `QUOTA_SALT` to a long random string in the Vercel env — without it, IP hashes are guessable.
 
