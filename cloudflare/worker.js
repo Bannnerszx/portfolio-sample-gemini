@@ -35,6 +35,10 @@ const proxy = {
     const headers = new Headers(request.headers);
     headers.delete("x-proxy-token");
     headers.delete("host");
+    // Ask Google for an uncompressed body. The Workers runtime may transparently
+    // decompress the response while leaving Content-Encoding on it — forcing
+    // identity keeps the body and its headers from disagreeing (see below).
+    headers.set("accept-encoding", "identity");
 
     const upstream = await fetch(
       new Request(url, {
@@ -45,12 +49,19 @@ const proxy = {
       })
     );
 
-    // Pass the response through untouched — the SDK needs the original status
-    // and body to map errors to its own reason codes.
+    // Pass the status and body through, but drop the framing headers Cloudflare
+    // may have invalidated. If the runtime decompressed the body, a leftover
+    // Content-Encoding: gzip makes the client try to gunzip plain JSON and throw;
+    // a stale Content-Length can truncate it. Everything else is passed as-is so
+    // the SDK still maps errors to its own reason codes.
+    const respHeaders = new Headers(upstream.headers);
+    respHeaders.delete("content-encoding");
+    respHeaders.delete("content-length");
+    respHeaders.delete("transfer-encoding");
     return new Response(upstream.body, {
       status: upstream.status,
       statusText: upstream.statusText,
-      headers: upstream.headers,
+      headers: respHeaders,
     });
   },
 };

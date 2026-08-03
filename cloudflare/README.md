@@ -7,9 +7,18 @@ which [`toReason()`](../lib/gemini.js) maps to `api_400`, so `/api/triage`
 degraded to fixtures on every run and showed the "Live AI is unavailable"
 notice. Local dev worked because the laptop is in a supported region.
 
-This Worker forwards requests to Google from Cloudflare's network, which is not
-blocked. It's the smallest fix that leaves the app, the auth model, and the
-pricing constants untouched.
+This Worker forwards requests to Google from Cloudflare's network. It's the
+smallest fix that leaves the app, the auth model, and the pricing constants
+untouched.
+
+> **Caveat — this only helps if Cloudflare egresses from a *supported* region.**
+> Workers run in the data center closest to the caller. When the caller is a VM
+> in a blocked region (e.g. Hong Kong), the Worker can run in that same colo and
+> its outbound `fetch()` to Google egresses from a nearby IP — so Google may
+> still geolocate the request to the blocked region and return `api_400`. Verify
+> before trusting it (see [Verify](#verify)). If it still 400s, the Worker is the
+> wrong tool: point `GEMINI_BASE_URL` at a reverse proxy hosted in a supported
+> region instead. Nothing in the app changes — only the two env values below.
 
 ## Deploy
 
@@ -42,15 +51,33 @@ Then push to `main` to redeploy.
 
 ## Verify
 
-From the VM, after the deploy:
+**Test the proxy path directly from the VM** — this reproduces the real egress
+region (running it from a laptop in a supported region would not):
+
+```bash
+curl -sS -D - -o /dev/null \
+  -H "x-proxy-token: $GEMINI_PROXY_TOKEN" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  "https://harbor-gemini-proxy.<subdomain>.workers.dev/v1beta/models/gemini-3.1-flash-lite:generateContent" \
+  -d '{"contents":[{"parts":[{"text":"ping"}]}]}'
+```
+
+- **200** — the proxy works; live AI should now run.
+- **400 `FAILED_PRECONDITION` / "User location is not supported"** — Cloudflare
+  egressed from the blocked region (the `cf-ray:` header's trailing colo code,
+  e.g. `HKG`, confirms where the Worker ran). The Worker can't fix this; use a
+  supported-region reverse proxy instead — see the caveat above.
+- **403** — `GEMINI_PROXY_TOKEN` doesn't match the Worker's `PROXY_TOKEN`.
+
+Then confirm end to end:
 
 ```bash
 docker compose exec app printenv GEMINI_BASE_URL
 docker compose logs app --tail=50 | grep "Gemini unavailable"
 ```
 
-The second command should print nothing on a successful run. A `403` reason
-means `GEMINI_PROXY_TOKEN` doesn't match the Worker's `PROXY_TOKEN`.
+The grep should print nothing on a successful run.
 
 ## Notes
 
