@@ -34,7 +34,13 @@ jobs:
           script: |
             set -euo pipefail
             cd ~/portfolio-sample-gemini
-            
+
+            # Pull the latest code from GitHub before building.
+            # reset --hard (not pull) because this checkout is a grafted/shallow
+            # clone; only tracked files are touched, so .env below is safe.
+            git fetch origin main
+            git reset --hard origin/main
+
             # Write to .env and strip Windows line endings (\r) automatically
             echo "$B64_ENV" | base64 -d | tr -d '\r' > .env
             
