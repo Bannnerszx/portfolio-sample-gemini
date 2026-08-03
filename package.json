@@ -3,14 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
+    "dev": "next dev",
     "start": "next start",
     "lint": "eslint",
-    "setup:sheet": "node --env-file=.env.local scripts/bootstrap-sheet.mjs"
+    "setup:sheet": "node --env-file=.env.local scripts/bootstrap-sheet.mjs",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@google/genai": "^2.13.0",
+    "@opennextjs/cloudflare": "^1.20.2",
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",
     "next": "15.5.16",
@@ -24,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.16",
     "googleapis": "^173.0.0",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "wrangler": "^4.118.0"
   }
 }
