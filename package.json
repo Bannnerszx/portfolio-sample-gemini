@@ -18,7 +18,7 @@
     "@opennextjs/cloudflare": "^1.20.2",
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",
-    "next": "15.5.16",
+    "next": "15.5.22",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.4.3"
@@ -27,7 +27,7 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
-    "eslint-config-next": "15.5.16",
+    "eslint-config-next": "15.5.22",
     "googleapis": "^173.0.0",
     "tailwindcss": "^4",
     "wrangler": "^4.118.0"
